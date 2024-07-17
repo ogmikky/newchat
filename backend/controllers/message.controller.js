@@ -1,6 +1,8 @@
 import Conversation from '../models/conversation.model.js'
 import Message from '../models/message.model.js';
 import { getReceiverSocketId, io } from '../socket/socket.js';
+import cloudinary from '../utils/cloudinarys.js';
+
 
 export const sendMessage = async (req, res) =>{
   
@@ -8,6 +10,20 @@ export const sendMessage = async (req, res) =>{
     const {message} = req.body;
     const {id: receiverId } = req.params;
     const senderId = req.user._id;
+
+
+    let imageUrl = ''; // Initialize image URL variable
+
+      // Check if there is an uploaded file
+    if (req.file) {
+      // Upload image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "messageImage",
+        transformation: [{ width: 200, height: 300, crop: 'limit' }],
+      })
+      
+      imageUrl = result.secure_url; // Save image URL
+    }
 
 
     let conversation = await Conversation.findOne({
@@ -27,7 +43,7 @@ export const sendMessage = async (req, res) =>{
       senderId,
       receiverId,
       message,
-
+      imageUrl,
     })
 
 
